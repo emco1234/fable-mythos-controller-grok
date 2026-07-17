@@ -127,6 +127,85 @@ async def run_dual_model_verification(
                 duration_ms=int((time.monotonic() - start) * 1000),
                 reason_if_skipped="anthropic SDK not installed; pip install anthropic",
             )
+    elif provider == "google":
+        try:
+            import google.generativeai as genai  # type: ignore
+            genai.configure()  # picks up GOOGLE_API_KEY from env
+            gmodel = genai.GenerativeModel(model)
+            resp = await asyncio.to_thread(lambda: gmodel.generate_content(prompt))
+            second_status = resp.text.strip().upper()
+            completion_tokens = 0
+        except ImportError:
+            return DualModelResult(
+                enabled=True, agreed=None,
+                primary_status=primary_status, second_status=None,
+                prompt_tokens=prompt_tokens, completion_tokens=0,
+                duration_ms=int((time.monotonic() - start) * 1000),
+                reason_if_skipped="google-generativeai SDK not installed; pip install google-generativeai",
+            )
+        except Exception as e:
+            return DualModelResult(
+                enabled=True, agreed=None,
+                primary_status=primary_status, second_status=None,
+                prompt_tokens=prompt_tokens, completion_tokens=0,
+                duration_ms=int((time.monotonic() - start) * 1000),
+                reason_if_skipped=f"google SDK error: {e!r}",
+            )
+    elif provider == "cohere":
+        try:
+            import cohere  # type: ignore
+            client = cohere.Client()
+            resp = await asyncio.to_thread(
+                lambda: client.generate(model=model, prompt=prompt, max_tokens=64)
+            )
+            second_status = resp.generations[0].text.strip().upper()
+            completion_tokens = 0
+        except ImportError:
+            return DualModelResult(
+                enabled=True, agreed=None,
+                primary_status=primary_status, second_status=None,
+                prompt_tokens=prompt_tokens, completion_tokens=0,
+                duration_ms=int((time.monotonic() - start) * 1000),
+                reason_if_skipped="cohere SDK not installed; pip install cohere",
+            )
+        except Exception as e:
+            return DualModelResult(
+                enabled=True, agreed=None,
+                primary_status=primary_status, second_status=None,
+                prompt_tokens=prompt_tokens, completion_tokens=0,
+                duration_ms=int((time.monotonic() - start) * 1000),
+                reason_if_skipped=f"cohere SDK error: {e!r}",
+            )
+    elif provider == "mistral":
+        try:
+            from mistralai.client import MistralClient  # type: ignore
+            from mistralai.models.chat_completion import ChatMessage  # type: ignore
+            client = MistralClient()
+            resp = await asyncio.to_thread(
+                lambda: client.chat(
+                    model=model,
+                    messages=[ChatMessage(role="user", content=prompt)],
+                    max_tokens=64,
+                )
+            )
+            second_status = resp.choices[0].message.content.strip().upper()
+            completion_tokens = resp.usage.completion_tokens if resp.usage else 0
+        except ImportError:
+            return DualModelResult(
+                enabled=True, agreed=None,
+                primary_status=primary_status, second_status=None,
+                prompt_tokens=prompt_tokens, completion_tokens=0,
+                duration_ms=int((time.monotonic() - start) * 1000),
+                reason_if_skipped="mistralai SDK not installed; pip install mistralai",
+            )
+        except Exception as e:
+            return DualModelResult(
+                enabled=True, agreed=None,
+                primary_status=primary_status, second_status=None,
+                prompt_tokens=prompt_tokens, completion_tokens=0,
+                duration_ms=int((time.monotonic() - start) * 1000),
+                reason_if_skipped=f"mistral SDK error: {e!r}",
+            )
     else:
         return DualModelResult(
             enabled=True, agreed=None,

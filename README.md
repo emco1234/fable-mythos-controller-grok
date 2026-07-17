@@ -96,3 +96,7 @@ It DOES demonstrate:
 - [`emco1234/fable-mythos-controller-opencode`](https://github.com/emco1234/fable-mythos-controller-opencode) — Same skeleton for OpenCode
 - [`emco1234/fable-mythos-controller-zcode`](https://github.com/emco1234/fable-mythos-controller-zcode) — Same skeleton for ZCode
 - `anpassungen.md` — the analysis that motivated this work
+
+## Primary MAP for daily use
+
+**Do not use this controller as your primary MAP setup.** Daily reliable MAP is the **prompt-based** harness (able-mythos-zcode / able-mythos-opencode / able-mythos-grok). This controller remains an experimental walking skeleton with stub adapters.
